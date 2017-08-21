@@ -2,8 +2,6 @@
 char* findSSID(String sdTemp, long pass){
   if (sdtemp.startsWith("ssid: ") && pass == 13) {
     ssid = sdtemp.substring(sdtemp.indexOf(32) + 1, sdtemp.length());
-    Serial.print("ssid length: ");
-    Serial.println(ssid.length());
     ssidc = new char[ssid.length()];
     ssid.toCharArray(ssidc, ssid.length() + 1);
   }
@@ -24,21 +22,10 @@ void getIt(String getIt){
   int pointer = 0;
 
   int firstPointer = getIt.indexOf("\n");
-  
   String firstString = getIt.substring(pointer, firstPointer);
-
   int secondPointer = getIt.indexOf("\n", firstPointer+1);
-
   String secondString = getIt.substring(firstPointer+1, secondPointer);
   String thirdString = getIt.substring(secondPointer+1, getIt.length());
-
-  Serial.print("first: ");
-  Serial.println(firstString);
-  Serial.print("second: ");
-  Serial.println(secondString);
-  Serial.print("third: ");
-  Serial.println(thirdString);
- Serial.println("======================");
 }
 
 

@@ -26,7 +26,9 @@
 ESP8266WiFiMulti WiFiMulti;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
-DeviceAddress insideThermometer, outsideThermometer;
+DeviceAddress allDevices[15];
+DeviceAddress insideThermometer;
+DeviceAddress outsideThermometer;
 DeviceAddress sideThermometer;
 LiquidCrystal_I2C lcd(LCD_BUS, 20, 4);
 File myFile;
@@ -55,8 +57,6 @@ void setup() {
   lcd.backlight(); // Enable or Turn On the backlight 
 
 
-
-  Serial.print("Initializing SD card...");
   if (!SD.begin(SD_CS)) {
     Serial.println("initialization failed!");
     return;
@@ -77,7 +77,7 @@ void setup() {
 
   getIt(sdtemp);
 
-  Serial.println("Dallas Temperature IC Control Library Demo");
+  //Dallas Temperature IC Control Library Demo
   sensors.begin();
 
 
@@ -92,6 +92,14 @@ void setup() {
   Serial.print("Parasite power is: ");
   if (sensors.isParasitePowerMode()) Serial.println("ON");
   else Serial.println("OFF");
+  
+
+  DeviceAddress allDevices[one_wire_devices_count];
+
+  for(int i = 0; i < one_wire_devices_count; i++){
+    sensors.getAddress(allDevices[i],i);
+  }
+
 
   if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0");
   if (!sensors.getAddress(outsideThermometer, 1)) Serial.println("Unable to find address for Device 1");
@@ -150,43 +158,48 @@ void setup() {
 
 void loop() {
 
-//  checkSelfStatus();
+  checkSelfStatus();
 
   Serial.print("Requesting temperatures...");
   sensors.requestTemperatures();
   Serial.println("DONE");
 
-  // wait for WiFi connection
-  if ((WiFiMulti.run() == WL_CONNECTED)) {
-
-    HTTPClient http;
-
-    Serial.print("[HTTP] begin...\n");
-
     float tempC = sensors.getTempC(insideThermometer);
     float tempC2 = sensors.getTempC(outsideThermometer);
     float tempC3 = sensors.getTempC(sideThermometer);
 
+  
   lcd.setCursor(0, 0);
-  lcd.print("temp1: ");
+  lcd.print(addressToString(insideThermometer));
+  lcd.print(" ");
   lcd.print(String(tempC));
   lcd.print((char)223);
   
   lcd.setCursor(0, 1);
-  lcd.print("temp2: ");
+  lcd.print(addressToString(outsideThermometer));
+  lcd.print(" ");
   lcd.print(String(tempC2));
   lcd.print((char)223);
   lcd.setCursor(0, 2);
-  lcd.print("temp3: ");
+  lcd.print(addressToString(sideThermometer));
+  lcd.print(" ");
   lcd.print(String(tempC3));
   lcd.print((char)223);
+  lcd.setCursor(0,3);
 
+static const unsigned long REFRESH_INTERVAL = 1000 * 20; // ms
+static unsigned long lastRefreshTime = 0;
 
-    String path = "http://josie.magic-mouse.dk/index.php/Welcome/log_temp?sensor=";
-    path.concat(addressToString(insideThermometer));
-    path.concat("&temp=");
-    path.concat(String(tempC));
+  if(millis() - lastRefreshTime >= REFRESH_INTERVAL){
+  if ((WiFiMulti.run() == WL_CONNECTED)) {
+    lastRefreshTime += REFRESH_INTERVAL;
 
+    HTTPClient http;
+
+    Serial.print("[HTTP] begin...\n");
+    String path = "http://josie.magic-mouse.dk/index.php/Welcome/log_temp?sensor=%1&temp=%2";
+    path.replace("%1", addressToString(insideThermometer));
+    path.replace("%2",String(tempC));
     Serial.print(path);
 
     http.begin(path); //HTTP
@@ -212,11 +225,11 @@ void loop() {
 
     http.end();
 
+
     String path2 = "http://josie.magic-mouse.dk/index.php/Welcome/log_temp?sensor=";
     path2.concat(addressToString(outsideThermometer));
     path2.concat("&temp=");
     path2.concat(String(tempC2));
-
     Serial.print(path2);
 
     http.begin(path2); //HTTP
@@ -271,10 +284,10 @@ void loop() {
 
     http.end();
   }
+  }
 
 
-
-  delay(1000 * 20); //60*30);
+  delay(100);
 }
 
 
