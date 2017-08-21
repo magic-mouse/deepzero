@@ -1,3 +1,6 @@
+/* 
+ *  #### INCLUDES ####
+ */
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
@@ -9,28 +12,36 @@
 #include <Wire.h>  // This library is already built in to the Arduino IDE
 #include <LiquidCrystal_I2C.h> //This library you can add via Include Library > Manage Library > 
 
-LiquidCrystal_I2C lcd(0x27, 20, 4);
-
-
+/* 
+ *  #### DEFINITIONS ####
+ */
 #define ONE_WIRE_BUS 10
 #define TEMPERATURE_PRECISION 9
 #define SD_CS 3
+#define LCD_BUS 0x27
 
-
-
+/* 
+ *  ##### CONSTRUCTORS ####
+ */
 ESP8266WiFiMulti WiFiMulti;
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 DeviceAddress insideThermometer, outsideThermometer;
 DeviceAddress sideThermometer;
-//WifiSensorLoop wsl;
-
+LiquidCrystal_I2C lcd(LCD_BUS, 20, 4);
 File myFile;
-String ssid, passwd, sdtemp;
-int one_wire_devices_count;
+
+/* 
+ * #### GLOBAL VARIABLES ####
+ */
+String ssid;
+String passwd;
+String sdtemp;
 
 char* ssidc;
 char* passc;
+
+int one_wire_devices_count;
 
 void setup() {
   Serial.begin(115200);
@@ -160,6 +171,7 @@ void loop() {
   lcd.print("temp1: ");
   lcd.print(String(tempC));
   lcd.print((char)223);
+  
   lcd.setCursor(0, 1);
   lcd.print("temp2: ");
   lcd.print(String(tempC2));
