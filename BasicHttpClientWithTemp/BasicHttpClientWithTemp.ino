@@ -85,7 +85,7 @@ void setup() {
   // locate devices on the bus
   Serial.print("Locating devices...");
   Serial.print("Found ");
-  Serial.print(sensors.getDeviceCount(), DEC);
+  Serial.print(one_wire_devices_count, DEC);
   Serial.println(" devices.");
 
   // report parasite power requirements
@@ -100,41 +100,24 @@ void setup() {
     sensors.getAddress(allDevices[i],i);
   }
 
-
-  if (!sensors.getAddress(insideThermometer, 0)) Serial.println("Unable to find address for Device 0");
-  if (!sensors.getAddress(outsideThermometer, 1)) Serial.println("Unable to find address for Device 1");
-  if (!sensors.getAddress(sideThermometer, 2)) Serial.println("Unable to find address for Device 1");
-
-
-  Serial.print("Device 0 Address: ");
-  printAddress(insideThermometer);
-  Serial.println();
-
-  Serial.print("Device 1 Address: ");
-  printAddress(outsideThermometer);
-  Serial.println();
-
-  Serial.print("Device 2 Address: ");
-  printAddress(sideThermometer);
-  Serial.println();
-
-  // set the resolution to 9 bit
-  sensors.setResolution(insideThermometer, TEMPERATURE_PRECISION);
-  sensors.setResolution(outsideThermometer, TEMPERATURE_PRECISION);
-  sensors.setResolution(sideThermometer, TEMPERATURE_PRECISION);
-
-  Serial.print("Device 0 Resolution: ");
-  Serial.print(sensors.getResolution(insideThermometer), DEC);
-  Serial.println();
-
-  Serial.print("Device 1 Resolution: ");
-  Serial.print(sensors.getResolution(outsideThermometer), DEC);
-  Serial.println();
-
-  Serial.print("Device 2 Resolution: ");
-  Serial.print(sensors.getResolution(sideThermometer), DEC);
-  Serial.println();
-
+  for(int i = 0; i < one_wire_devices_count; i++){
+    String introText = "########## Running setup on device %1 ##########";
+    introText.replace("%1", String(i));
+    Serial.println(introText);
+    String a = "Device %1 Address: ";
+    a.replace("%1",String(i));
+    Serial.print(a);
+    printAddress(allDevices[i]);
+    Serial.println();
+    Serial.println("Setting resolution");
+    sensors.setResolution(allDevices[i], TEMPERATURE_PRECISION);
+    String b = "Device %1 Resolution: ";
+    b.replace("%1",String(i));
+    Serial.print(b);
+    Serial.print(sensors.getResolution(insideThermometer), DEC);
+    Serial.println();
+  }
+  
   Serial.println();
   Serial.println();
   Serial.println();
@@ -145,14 +128,8 @@ void setup() {
     delay(1000);
   }
 
-     WiFiMulti.addAP("Grannen3", "simma4hoppa11");
-
-  Serial.print("ssid: ");
-  Serial.println(ssidc);
-  Serial.print("passc: ");
-  Serial.println(passc);
-
- // WiFiMulti.addAP(ssidc, passc);
+   //WiFiMulti.addAP("Grannen3", "simma4hoppa11");
+   WiFiMulti.addAP(ssidc, passc);
 
 }
 
@@ -168,24 +145,7 @@ void loop() {
     float tempC2 = sensors.getTempC(outsideThermometer);
     float tempC3 = sensors.getTempC(sideThermometer);
 
-  
-  lcd.setCursor(0, 0);
-  lcd.print(addressToString(insideThermometer));
-  lcd.print(" ");
-  lcd.print(String(tempC));
-  lcd.print((char)223);
-  
-  lcd.setCursor(0, 1);
-  lcd.print(addressToString(outsideThermometer));
-  lcd.print(" ");
-  lcd.print(String(tempC2));
-  lcd.print((char)223);
-  lcd.setCursor(0, 2);
-  lcd.print(addressToString(sideThermometer));
-  lcd.print(" ");
-  lcd.print(String(tempC3));
-  lcd.print((char)223);
-  lcd.setCursor(0,3);
+  lcdUpdater(tempC, tempC2, tempC3);
 
 static const unsigned long REFRESH_INTERVAL = 1000 * 20; // ms
 static unsigned long lastRefreshTime = 0;
