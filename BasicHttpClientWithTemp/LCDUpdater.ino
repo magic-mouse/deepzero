@@ -1,21 +1,30 @@
-void lcdUpdater(float t1, float t2, float t3){
+void lcdUpdater(float t1[]){
+
+  Serial.println("Printing LCD");
+    for(int i =0; i < one_wire_devices_count; i++){
+      Serial.print("Printing line: ");
+      Serial.println(i);
+      String floatTemp = String(t1[i]);
+      lcd.setCursor(13,i);
+      lcd.print("      ");
+      lcd.setCursor(0, i);
+      lcd.print(addressToString(allDevices[i]).substring(0,12));
+      Serial.print("FloatTemo-7: ");
+      Serial.print(floatTemp.length()-7);
+      Serial.print(", FloatTempSize: ");
+      Serial.println(floatTemp.length());
+      for(int i = 0; i < 7-floatTemp.length(); i++){
+        lcd.print(" ");
+      }
+      lcd.print(floatTemp);
+      lcd.print((char)223);
+    }
+}
+
+
+String formatTemp(float tempTemp){
+
+return String(tempTemp);
   
-  lcd.setCursor(0, 0);
-  lcd.print(addressToString(allDevices[0]));
-  lcd.print(" ");
-  lcd.print(String(t1));
-  lcd.print((char)223);
-  
-  lcd.setCursor(0, 1);
-  lcd.print(addressToString(allDevices[1]));
-  lcd.print(" ");
-  lcd.print(String(t2));
-  lcd.print((char)223);
-  lcd.setCursor(0, 2);
-  lcd.print(addressToString(allDevices[2]));
-  lcd.print(" ");
-  lcd.print(String(t3));
-  lcd.print((char)223);
-  lcd.setCursor(0,3);
 }
 

@@ -1,3 +1,35 @@
+void detectDevices(){
+  one_wire_devices_count = sensors.getDeviceCount();
+
+  lcd.setCursor(0,0);
+  lcd.print("Found devices: ");
+  lcd.print(one_wire_devices_count);
+  delay(1000);
+  
+  for(int i = 0; i < one_wire_devices_count; i++){
+    sensors.getAddress(allDevices[i],i);
+  }
+
+  for(int i = 0; i < one_wire_devices_count; i++){
+    String introText = "########## Running setup on device %1 ##########";
+    introText.replace("%1", String(i));
+    Serial.println(introText);
+    String a = "Device %1 Address: ";
+    a.replace("%1",String(i));
+    Serial.print(a);
+    printAddress(allDevices[i]);
+    Serial.println();
+    Serial.println("Setting resolution");
+    sensors.setResolution(allDevices[i], TEMPERATURE_PRECISION);
+    String b = "Device %1 Resolution: ";
+    b.replace("%1",String(i));
+    Serial.print(b);
+    Serial.print(sensors.getResolution(allDevices[1]), DEC);
+    Serial.println();
+  }
+}
+
+
 // function to print the temperature for a device
 void printTemperature(DeviceAddress deviceAddress)
 {

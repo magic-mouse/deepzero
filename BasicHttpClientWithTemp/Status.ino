@@ -14,7 +14,7 @@ void checkSelfStatus(){
   checkSDConnection();
 
   checkWiFi();
-
+  Serial.println("check Thermometer");
   checkThermometer();
 }
 
@@ -27,6 +27,16 @@ void checkWiFi(){
 }
 
 void checkThermometer(){
+  sensors.begin();
+Serial.print("oneWireDevicesCount: ");
+Serial.print(one_wire_devices_count);
+Serial.print(" sensor.getDevices(): ");
+Serial.println(sensors.getDeviceCount());
+
+  if(one_wire_devices_count != sensors.getDeviceCount()){
+      lcd.clear();
+      detectDevices();
+  }
   
 }
 
