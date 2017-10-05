@@ -3,6 +3,7 @@ void getIt(String getIt){
   JsonObject& root = jsonBuffer.parseObject(getIt);
   
   if (!root.success()) {
+      Serial.print("getIt : ");
       Serial.println("parseObject() failed");
       return;
   }
@@ -14,20 +15,27 @@ void getIt(String getIt){
 
 void mapSD(String mapSD){
   Serial.println("MapSD");
+  Serial.println(mapSD);
+  Serial.println("====================");
+  
   StaticJsonBuffer<200> jsonBuffer;
-  JsonArray& tempMap = jsonBuffer.parseArray(mapSD);
-  if(!tempMap.success()){
+  JsonArray& tempArr = jsonBuffer.parseArray(mapSD);
+  if(!tempArr.success()){
+    Serial.print("sdMap : ");
     Serial.println("parseObject() failed");
     return;
   }
 
-  const char* hello = tempMap[0];
+
+  for(int i = 0; i < tempArr.size(); i++) {
+      tempMap[i] = {tempArr[i]["id"], tempArr[i]["name"]};
+  }
 
 
 
 
   Serial.println("===========");
-  Serial.println(hello);
+  //Serial.println(hello);
   Serial.println("===========");
 }
 

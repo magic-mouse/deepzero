@@ -13,6 +13,8 @@
 #include <LiquidCrystal_I2C.h>
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
+#include "RTClib.h"
+#include "Thermo.h"
 
 /*
     #### DEFINITIONS ####
@@ -21,8 +23,7 @@
 #define TEMPERATURE_PRECISION 9
 #define SD_CS 3
 #define LCD_BUS 0x27
-#define MAX_ID_LENGTH 128
-#define MAX_NAME_LENGTH 10
+
 /*
     ##### CONSTRUCTORS ####
 */
@@ -32,7 +33,7 @@ DallasTemperature sensors(&oneWire);
 DeviceAddress allDevices[128];
 LiquidCrystal_I2C lcd(LCD_BUS, 20, 4);
 File myFile;
-
+RTC_DS1307 rtc;
 
 /*
    #### GLOBAL VARIABLES ####
@@ -44,7 +45,7 @@ char* ssid;
 char* pass;
 String path = "http://josie.magic-mouse.dk/index.php/Welcome/log_temp?sensor=%1&temp=%2";
 int one_wire_devices_count;
-Device deviceMap[128];
+Thermo tempMap[128];
 
 void setup() {
   Serial.begin(115200);
@@ -61,15 +62,18 @@ void setup() {
     Serial.println("initialization failed!");
     return;
   }
+  if (! rtc.begin()) {
+    Serial.println("Couldn't find RTC");
+    while (1);
+  }
 
+  printTimeToSerial(rtc.now());
 
   confFromSD();
   getIt(sdtemp);
 
   mapsFromSD();
   mapSD(mapTemp);
-
-
 
   //Dallas Temperature IC Control Library Demo
   sensors.begin();
@@ -79,10 +83,6 @@ void setup() {
     sensors.getAddress(allDevices[i], i);
     sensors.setResolution(allDevices[i], TEMPERATURE_PRECISION);
   }
-
-
-  //Serial.println(tempMap[printAddress(allDevices[i])]);
-
 
   for (uint8_t t = 4; t > 0; t--) {
     Serial.printf("[SETUP] WAIT %d...\n", t);
@@ -103,27 +103,46 @@ void loop() {
   Serial.println("DONE");
 
   float tempC = sensors.getTempC(allDevices[0]);
-
-  lcd.setCursor(0, 0);
-  lcd.print(addressToString(allDevices[0]));
-  lcd.print(" ");
-  lcd.print(String(tempC));
-  lcd.print((char)223);
-
-
+  
   static const unsigned long REFRESH_INTERVAL = 1000 * 20; // ms
   static unsigned long lastRefreshTime = 0;
 
   if (millis() - lastRefreshTime >= REFRESH_INTERVAL) {
+
+
+
+    lcd.setCursor(0, 0);
+    lcd.print(addressToString(allDevices[0]));
+    lcd.print(" ");
+    lcd.print(String(tempC));
+    lcd.print((char)223);
+  
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+  
+    lcd.setCursor(0,2);
+    lcd.print("                    ");
+  
+    lcd.setCursor(0,3);
+    lcd.print("                    ");
+
+    
     if ((WiFiMulti.run() == WL_CONNECTED)) {
       lastRefreshTime += REFRESH_INTERVAL;
 
       for (int i = 0; i < one_wire_devices_count; i++) {
+        float temperature = sensors.getTempC(allDevices[i]);
+        if(temperature < -100){
+          updateTotalError();
+          Serial.println("Error in temperature reading skipping HTTP");
+          continue;
+        }
         HTTPClient http;
+
 
         Serial.print("[HTTP] begin...\n");
 
-        float temperature = sensors.getTempC(allDevices[i]);
+        
 
         Serial.print("Temperature from: ");
         Serial.print(addressToString(allDevices[i]));
@@ -135,6 +154,8 @@ void loop() {
         Serial.print(path);
 
         http.begin(path); //HTTP
+
+        logTemperatureToDisk(addressToString(allDevices[i]), temperature, rtc.now());
 
         Serial.print("[HTTP] GET...\n");
         // start connection and send HTTP header
