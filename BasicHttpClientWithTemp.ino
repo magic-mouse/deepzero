@@ -46,6 +46,7 @@ char* pass;
 String path = "http://josie.magic-mouse.dk/index.php/Welcome/log_temp?sensor=%1&temp=%2";
 int one_wire_devices_count;
 Thermo tempMap[128];
+int tempMapSize;
 
 void setup() {
   Serial.begin(115200);
@@ -78,12 +79,15 @@ void setup() {
   //Dallas Temperature IC Control Library Demo
   sensors.begin();
   one_wire_devices_count = sensors.getDeviceCount();
+  lcd.setCursor(0, 0);
+  lcd.print("Device Count: ");
+  lcd.print(one_wire_devices_count);
 
   for (int i = 0; i < one_wire_devices_count; i++) {
     sensors.getAddress(allDevices[i], i);
     sensors.setResolution(allDevices[i], TEMPERATURE_PRECISION);
   }
-
+  
   for (uint8_t t = 4; t > 0; t--) {
     Serial.printf("[SETUP] WAIT %d...\n", t);
     Serial.flush();
@@ -97,22 +101,28 @@ void setup() {
 void loop() {
 
   checkSelfStatus();
-
-  Serial.print("Requesting temperatures...");
-  sensors.requestTemperatures();
-  Serial.println("DONE");
-
-  float tempC = sensors.getTempC(allDevices[0]);
   
   static const unsigned long REFRESH_INTERVAL = 1000 * 20; // ms
   static unsigned long lastRefreshTime = 0;
 
   if (millis() - lastRefreshTime >= REFRESH_INTERVAL) {
 
-
-
+  Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures();
+  Serial.println("DONE");
+ float tempC = sensors.getTempC(allDevices[0]);
     lcd.setCursor(0, 0);
-    lcd.print(addressToString(allDevices[0]));
+
+    String lcdName;
+    for(int i = 0; i < tempMapSize; i++){
+      if(tempMap[i].id == addressToString(allDevices[1])){
+        lcdName = tempMap[i].name;
+      }
+    }
+
+    lcd.clear();
+   // lcd.print(addressToString(allDevices[1]));
+   lcd.print(lcdName);
     lcd.print(" ");
     lcd.print(String(tempC));
     lcd.print((char)223);

@@ -18,24 +18,25 @@ void mapSD(String mapSD){
   Serial.println(mapSD);
   Serial.println("====================");
   
-  StaticJsonBuffer<200> jsonBuffer;
-  JsonArray& tempArr = jsonBuffer.parseArray(mapSD);
+  StaticJsonBuffer<500> jsonBuffer;
+  JsonObject& tempArr = jsonBuffer.parseObject(mapSD);
   if(!tempArr.success()){
     Serial.print("sdMap : ");
     Serial.println("parseObject() failed");
     return;
   }
 
+int autoIndex = 0;
+for (auto kv : tempArr) {
+    Serial.println(kv.key);
+    Serial.println(kv.value.as<char*>());
+    tempMap[autoIndex] = {kv.key, kv.value.as<char*>()};
+    autoIndex++;
+}
 
-  for(int i = 0; i < tempArr.size(); i++) {
-      tempMap[i] = {tempArr[i]["id"], tempArr[i]["name"]};
-  }
-
-
-
+  tempMapSize = autoIndex;
 
   Serial.println("===========");
-  //Serial.println(hello);
   Serial.println("===========");
 }
 
